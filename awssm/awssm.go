@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-secretsmanager-caching-go/secretcache"
-	"github.com/hypcode-th/go-awssm-env"
 	"github.com/hypcode-th/go-awssm-env/awssm/internal"
 	"github.com/hypcode-th/go-awssm-env/awssm/option"
 	"strings"
@@ -106,7 +105,7 @@ func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok
 
 // parseReference parses `awssm://secretName/secretKey` to Reference.
 // returns `nil` when the value is malformed.
-func (c *client) parseReference(value string) *awssm.Reference {
+func (c *client) parseReference(value string) *Reference {
 	if !c.IsReference(value) {
 		return nil
 	}
@@ -115,7 +114,7 @@ func (c *client) parseReference(value string) *awssm.Reference {
 	if len(p) != 2 {
 		return nil
 	}
-	return &awssm.Reference{
+	return &Reference{
 		SecretName: p[0],
 		SecretKey:  p[1],
 	}
