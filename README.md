@@ -39,7 +39,7 @@ To automatic resolve the environment variables, import `auto` package to the mai
 // main.go
 
 import (
-    _ "github.com/hypcode/go-awssm-env/awssm/auto"
+    _ "github.com/hypcode-th/go-awssm-env/awssm/auto"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package option
 
 import (
-	"github.com/hypcode/go-awssm-env/awssm/internal"
+	"github.com/hypcode-th/go-awssm-env/awssm/internal"
 )
 
 type ClientOption interface {

@@ -1,4 +1,4 @@
-module github.com/hypcode/go-awssm-env
+module github.com/hypcode-th/go-awssm-env
 
 go 1.21.1
 

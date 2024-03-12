@@ -6,9 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-secretsmanager-caching-go/secretcache"
-	"github.com/hypcode/go-awssm-env"
-	"github.com/hypcode/go-awssm-env/awssm/internal"
-	"github.com/hypcode/go-awssm-env/awssm/option"
+	"github.com/hypcode-th/go-awssm-env"
+	"github.com/hypcode-th/go-awssm-env/awssm/internal"
+	"github.com/hypcode-th/go-awssm-env/awssm/option"
 	"strings"
 	"sync"
 )

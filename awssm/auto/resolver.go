@@ -2,7 +2,7 @@ package auto
 
 import (
 	"context"
-	"github.com/hypcode/go-awssm-env/awssm"
+	"github.com/hypcode-th/go-awssm-env/awssm"
 	"os"
 	"strings"
 )
