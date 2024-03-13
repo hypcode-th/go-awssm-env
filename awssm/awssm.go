@@ -13,8 +13,13 @@ import (
 )
 
 type Client interface {
+	// IsReference return true when the given value starts with ReferencePrefix.
 	IsReference(value string) bool
-	Resolve(ctx context.Context, key string) (resolved string, ok bool)
+
+	// Resolve check value IsReference and resolve to the AWS secret value.
+	//
+	// returns an empty string with ok = false when failed to resolve the value.
+	Resolve(ctx context.Context, value string) (resolved string, ok bool)
 }
 
 func NewClient(opts ...option.ClientOption) Client {
@@ -27,24 +32,20 @@ func NewClient(opts ...option.ClientOption) Client {
 
 	smCache, _ := secretcache.New()
 	return &client{
-		settings: settings,
-		m:        &sync.Map{},
-		smCache:  smCache,
+		settings:                   settings,
+		secretNameToSecretKeyValue: &sync.Map{},
+		smCache:                    smCache,
 	}
 }
 
 type secretKeyValue map[string]string
 
-func (s *secretKeyValue) Get(key string) (string, bool) {
-	_s := *s
-	v, ok := _s[key]
-	return v, ok
-}
-
 type client struct {
 	settings *internal.Settings
-	m        *sync.Map
-	smCache  *secretcache.Cache
+
+	secretNameToSecretKeyValue *sync.Map
+
+	smCache *secretcache.Cache
 }
 
 func (c *client) IsReference(value string) bool {
@@ -61,7 +62,7 @@ func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok
 		return "", false
 	}
 
-	v, _ := c.m.Load(ref.SecretName)
+	v, _ := c.secretNameToSecretKeyValue.Load(ref.SecretName)
 	secretKv, ok := v.(*secretKeyValue)
 	if !ok {
 		secrets, err := c.smCache.Client.ListSecretsWithContext(ctx, &secretsmanager.ListSecretsInput{
@@ -91,7 +92,7 @@ func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok
 		if err := json.Unmarshal([]byte(secretString), secretKv); err != nil {
 			return "", false
 		}
-		c.m.Store(ref.SecretName, secretKv)
+		c.secretNameToSecretKeyValue.Store(ref.SecretName, secretKv)
 	}
 
 	if secretKv != nil {
