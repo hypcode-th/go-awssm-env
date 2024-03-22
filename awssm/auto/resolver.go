@@ -2,6 +2,7 @@ package auto
 
 import (
 	"context"
+	"fmt"
 	"github.com/hypcode-th/go-awssm-env/awssm"
 	"os"
 	"strings"
@@ -21,10 +22,16 @@ func init() {
 			continue
 		}
 
-		if resolved, ok := client.Resolve(ctx, v); ok {
-			if err := os.Setenv(k, resolved); err != nil {
-				continue
-			}
+		resolved, err := client.Resolve(ctx, v)
+		if err != nil {
+			fmt.Printf("failed to resolve a reference '%s'. %s", v, err.Error())
+			continue
 		}
+
+		if err := os.Setenv(k, resolved); err != nil {
+			fmt.Printf("failed to set environment '%s'. %s", k, err.Error())
+			continue
+		}
+
 	}
 }
