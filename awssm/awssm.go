@@ -3,6 +3,7 @@ package awssm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-secretsmanager-caching-go/secretcache"
@@ -19,7 +20,7 @@ type Client interface {
 	// Resolve check value IsReference and resolve to the AWS secret value.
 	//
 	// returns an empty string with ok = false when failed to resolve the value.
-	Resolve(ctx context.Context, value string) (resolved string, ok bool)
+	Resolve(ctx context.Context, value string) (resolved string, err error)
 }
 
 func NewClient(opts ...option.ClientOption) Client {
@@ -52,14 +53,14 @@ func (c *client) IsReference(value string) bool {
 	return strings.HasPrefix(value, c.settings.ReferencePrefix)
 }
 
-func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok bool) {
+func (c *client) Resolve(ctx context.Context, value string) (resolved string, err error) {
 	if !c.IsReference(value) {
-		return "", false
+		return "", errors.New("value is not a reference")
 	}
 
 	ref := c.parseReference(value)
 	if ref == nil {
-		return "", false
+		return "", errors.New("failed to parse a reference")
 	}
 
 	v, _ := c.secretNameToSecretKeyValue.Load(ref.SecretName)
@@ -77,20 +78,20 @@ func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok
 			MaxResults: aws.Int64(1),
 		})
 		if err != nil {
-			return "", false
+			return "", err
 		}
 		if len(secrets.SecretList) == 0 {
-			return "", false
+			return "", errors.New("secret not found")
 		}
 
 		secretString, err := c.smCache.GetSecretStringWithContext(ctx, *secrets.SecretList[0].ARN)
 		if err != nil {
-			return "", false
+			return "", err
 		}
 
 		secretKv = &secretKeyValue{}
 		if err := json.Unmarshal([]byte(secretString), secretKv); err != nil {
-			return "", false
+			return "", err
 		}
 		c.secretNameToSecretKeyValue.Store(ref.SecretName, secretKv)
 	}
@@ -98,10 +99,13 @@ func (c *client) Resolve(ctx context.Context, value string) (resolved string, ok
 	if secretKv != nil {
 		kv := *secretKv
 		secretValue, ok := kv[ref.SecretKey]
-		return secretValue, ok
+		if !ok {
+			return "", errors.New("secret key not found")
+		}
+		return secretValue, nil
 	}
 
-	return value, false
+	return "", errors.New("secret not found")
 }
 
 // parseReference parses `awssm://secretName/secretKey` to Reference.
