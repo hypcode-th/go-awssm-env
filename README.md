@@ -8,6 +8,7 @@ This tool will resolve the environment referenced to AWS SecretManager to the se
 
 * `secretsmanager:ListSecrets`
 * `secretsmanager:GetSecretValue`
+* `secretsmanager:DescribeSecret`
 
 ## Usage
 
@@ -21,9 +22,9 @@ The default `{ReferencePrefix}` is `awssm://`. To change this prefix use `option
     reference := "awssm://my-aws-secret-name/MY_SECRET"
     
     client := awssm.NewClient()
-    resolved, ok := client.Resolve(reference)
+    resolved, err := client.Resolve(reference)
     
-    if !ok {
+    if err != nil {
         fmt.Println("not resolved")
     } else {
         fmt.Printf("resolved to '%s'\n", resolved)
